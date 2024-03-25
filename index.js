@@ -2,6 +2,7 @@ require('dotenv').config();
 const { client, createTables, seed } = require('./db')
 const morgan = require('morgan')
 const express = require('express');
+const router = require('./api')
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,7 @@ const init = async () => {
   app.listen(process.env.PORT, () => {console.log(`app listening on ${process.env.PORT}`)})
 };
 
-app.use('/api', require('./api'))
+
+app.use('/api', router)
 
 init();

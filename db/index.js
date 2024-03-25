@@ -23,7 +23,8 @@ const createTables = async () => {
     CREATE TABLE user_favorites(
       id UUID PRIMARY KEY,
       user_id UUID REFERENCES users(id) NOT NULL,
-      product_id UUID REFERENCES products(id) NOT NULL
+      product_id UUID REFERENCES products(id) NOT NULL,
+      UNIQUE(user_id, product_id)
     );
   `
 
@@ -67,14 +68,15 @@ const fetchProducts = async () => {
 }
 
 const fetchUserFavorites = async (user_id) => {
-  const SQL = /*SQL*/ `SELECT * from user_favorites WHERE user_id='${user_id}'`
-  const response = await client.query(SQL);
+  const SQL = /*SQL*/ `SELECT * from user_favorites WHERE user_id=$1`
+  const response = await client.query(SQL, [user_id]);
   return response.rows
 }
 
-const destroyFavorite = async ({user_id, product_id}) => {
+
+const destroyFavorite = async ({user_id, user_favorites}) => {
   const SQL = /*SQL*/ `DELETE from user_favorites WHERE user_id=$1 AND product_id=$2`;
-  const response = await client.query(SQL[user_id, product_id]);
+  const response = await client.query(SQL, [user_id, user_favorites]);
 }
 
 const seed = async () => {
@@ -96,13 +98,14 @@ const seed = async () => {
   const products= await fetchProducts()
   console.log('Products are', await fetchProducts())
   await Promise.all([
-    createUserFavorites({user_id: users[0].id, product_id: products[1].id}), 
-    createUserFavorites({user_id: users[1].id, product_id: products[2].id}), 
-    createUserFavorites({user_id: users[2].id, product_id: products[3].id}), 
-    createUserFavorites({user_id: users[3].id, product_id: products[4].id}), 
-    createUserFavorites({user_id: users[4].id, product_id: products[0].id}), 
-  ])
-  console.log('User Favorites ', await fetchUserFavorites(users[0].id))
+    createUserFavorites({ user_id: users[0].id, product_id: products[1].id }), 
+    createUserFavorites({ user_id: users[1].id, product_id: products[2].id }), 
+    createUserFavorites({ user_id: users[2].id, product_id: products[3].id }), 
+    createUserFavorites({ user_id: users[3].id, product_id: products[4].id }), 
+    createUserFavorites({ user_id: users[4].id, product_id: products[0].id }), 
+  ]);
+  const userFavorites = await fetchUserFavorites(users[0].id);
+  console.log('User Favorites for the first user are', userFavorites);
 }
 
 module.exports = {
